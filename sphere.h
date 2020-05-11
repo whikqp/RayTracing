@@ -14,6 +14,7 @@ class sphere: public hittable  {
             : center(cen), radius(r), mat_ptr(m) {};
 
         virtual bool hit(const ray& r, double tmin, double tmax, hit_record& rec) const;
+        virtual bool bounding_box(double t0, double t1, aabb& output_box) const;
 
     public:
         vec3 center;

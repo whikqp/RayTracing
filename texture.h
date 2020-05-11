@@ -1,16 +1,5 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
-//==============================================================================================
-// Originally written in 2016 by Peter Shirley <ptrshrl@gmail.com>
-//
-// To the extent possible under law, the author(s) have dedicated all copyright and related and
-// neighboring rights to this software to the public domain worldwide. This software is
-// distributed without any warranty.
-//
-// You should have received a copy (see file COPYING.txt) of the CC0 Public Domain Dedication
-// along with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
-//==============================================================================================
-
 #include "rtweekend.h"
 
 #include "perlin.h"
@@ -21,6 +10,21 @@ class texture  {
         virtual vec3 value(double u, double v, const vec3& p) const = 0;
 };
 
+class solid_color : public texture {
+    public:
+        solid_color() {}
+        solid_color(color c) : color_value(c) {}
+
+        solid_color(double red, double green, double blue)
+          : solid_color(color(red,green,blue)) {}
+
+        virtual color value(double u, double v, const vec3& p) const {
+            return color_value;
+        }
+
+    private:
+        color color_value;
+};
 
 class constant_texture : public texture {
     public:

@@ -8,6 +8,7 @@ class moving_sphere : public hittable {
         {};
 
         virtual bool hit(const ray& r, double tmin, double tmax, hit_record& rec) const;
+        virtual bool bounding_box(double t0, double t1, aabb& output_box) const;
 
         vec3 center(double time) const;
 

@@ -5,6 +5,7 @@
 #include "material.h"
 #include "sphere.h"
 #include "moving_sphere.h"
+#include "texture.h"
 
 #include <time.h>
 #include <iostream>
@@ -35,7 +36,7 @@ hittable_list random_scene() {
     hittable_list world;
 
     world.add(make_shared<sphere>(
-        vec3(0,-1000,0), 1000, make_shared<lambertian>(vec3(0.5, 0.5, 0.5))));
+        vec3(0,-1000,0), 1000, make_shared<lambertian>(make_shared<solid_color>(0.5, 0.5, 0.5))));
 
     int i = 1;
     for (int a = -10; a < 10; a++) {
@@ -45,8 +46,8 @@ hittable_list random_scene() {
             if ((center - vec3(4, .2, 0)).length() > 0.9) {
                 if (choose_mat < 0.8) {
                     // diffuse
-                    auto albedo = vec3::random() * vec3::random();
-                    world.add(make_shared<moving_sphere>(center, center + vec3(0, random_double(0,.5), 0), 0.0, 1.0, 0.2,make_shared<lambertian>(albedo)));
+                    auto albedo = color::random() * color::random();
+                    world.add(make_shared<moving_sphere>(center, center + vec3(0, random_double(0,.5), 0), 0.0, 1.0, 0.2,make_shared<lambertian>(make_shared<solid_color>(albedo))));
                 } else if (choose_mat < 0.95) {
                     // metal
                     auto albedo = vec3::random(.5, 1);
@@ -61,9 +62,11 @@ hittable_list random_scene() {
     }
 
     world.add(make_shared<sphere>(vec3(0, 1, 0), 1.0, make_shared<dielectric>(1.5)));
-    world.add(make_shared<sphere>(vec3(-4, 1, 0), 1.0, make_shared<lambertian>(vec3(0.4, 0.2, 0.1))));
+   
     world.add(make_shared<sphere>(vec3(4, 1, 0), 1.0, make_shared<metal>(vec3(0.7, 0.6, 0.5), 0.0)));
 
+    auto checker = make_shared<checker_texture>(make_shared<solid_color>(0.2, 0.3, 0.1), make_shared<solid_color>(0.9, 0.9, 0.9));
+    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(checker)));
     return world;
 }
 

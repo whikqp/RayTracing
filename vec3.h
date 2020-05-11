@@ -74,6 +74,9 @@ class vec3 {
         double e[3];
 };
 
+using point3 = vec3;    //空间中点
+using color = vec3;     //RGB颜色
+
 
 // vec3 Utility Functions
 
