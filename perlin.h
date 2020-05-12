@@ -1,22 +1,22 @@
 #ifndef PERLIN_H
 #define PERLIN_H
-//==============================================================================================
-// Originally written in 2016 by Peter Shirley <ptrshrl@gmail.com>
-//
-// To the extent possible under law, the author(s) have dedicated all copyright and related and
-// neighboring rights to this software to the public domain worldwide. This software is
-// distributed without any warranty.
-//
-// You should have received a copy (see file COPYING.txt) of the CC0 Public Domain Dedication
-// along with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
-//==============================================================================================
-
 #include "rtweekend.h"
 
-
+inline double trilinear_interp(double c[2][2][2], double u, double v, double w)
+{
+    auto accum = 0.0;
+    for (int i = 0; i < 2; i++)
+        for (int j = 0; j < 2; j++)
+            for (int k = 0; k < 2; k++)
+                accum += (i * u + (1 - i) * (1 - u)) *
+                (j * v + (1 - j) * (1 - v)) *
+                (k * w + (1 - k) * (1 - w)) * c[i][j][k];
+    return accum;
+}
 
 class perlin {
     public:
+
         perlin() {
             ranvec = new vec3[point_count];
             for (int i = 0; i < point_count; ++i) {
@@ -28,17 +28,23 @@ class perlin {
             perm_z = perlin_generate_perm();
         }
 
+
+
         ~perlin() {
+            //delete[] ranfloat;
             delete[] ranvec;
             delete[] perm_x;
             delete[] perm_y;
             delete[] perm_z;
         }
 
-        double noise(const vec3& p) const {
+
+        double noise(const point3& p) const {
             auto u = p.x() - floor(p.x());
             auto v = p.y() - floor(p.y());
             auto w = p.z() - floor(p.z());
+            
+
             auto i = static_cast<int>(floor(p.x()));
             auto j = static_cast<int>(floor(p.y()));
             auto k = static_cast<int>(floor(p.z()));
@@ -73,6 +79,7 @@ class perlin {
     private:
         static const int point_count = 256;
         vec3* ranvec;
+        //double* ranfloat;
         int* perm_x;
         int* perm_y;
         int* perm_z;
@@ -97,7 +104,9 @@ class perlin {
             }
         }
 
-        inline static double perlin_interp(vec3 c[2][2][2], double u, double v, double w) {
+        inline static double perlin_interp(vec3 c[2][2][2], double u, double v, double w) 
+        {
+            //使用Hermite cubic进行平滑
             auto uu = u*u*(3-2*u);
             auto vv = v*v*(3-2*v);
             auto ww = w*w*(3-2*w);

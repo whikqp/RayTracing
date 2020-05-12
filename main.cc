@@ -35,9 +35,10 @@ vec3 ray_color(const ray& r, const hittable& world, int depth) {
 hittable_list random_scene() {
     hittable_list world;
 
-    world.add(make_shared<sphere>(
-        vec3(0,-1000,0), 1000, make_shared<lambertian>(make_shared<solid_color>(0.5, 0.5, 0.5))));
+    //world.add(make_shared<sphere>(vec3(0,-1000,0), 1000, make_shared<lambertian>(make_shared<solid_color>(0.5, 0.5, 0.5))));
 
+    auto checker = make_shared<checker_texture>(make_shared<solid_color>(0.2, 0.3, 0.1), make_shared<solid_color>(0.9, 0.9, 0.9));
+    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(checker)));
     int i = 1;
     for (int a = -10; a < 10; a++) {
         for (int b = -10; b < 10; b++) {
@@ -65,11 +66,37 @@ hittable_list random_scene() {
    
     world.add(make_shared<sphere>(vec3(4, 1, 0), 1.0, make_shared<metal>(vec3(0.7, 0.6, 0.5), 0.0)));
 
-    auto checker = make_shared<checker_texture>(make_shared<solid_color>(0.2, 0.3, 0.1), make_shared<solid_color>(0.9, 0.9, 0.9));
-    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(checker)));
     return world;
 }
 
+hittable_list two_spheres()
+{
+    hittable_list objects;
+    auto checker = make_shared<checker_texture>(make_shared<solid_color>(0.2, 0.3, 0.1), make_shared<solid_color>(0.9, 0.9, 0.9));     
+    objects.add(make_shared<sphere>(point3(0,-10,0), 10, make_shared<lambertian>(checker)));
+    objects.add(make_shared<sphere>(point3(0,10,0), 10, make_shared<lambertian>(checker)));
+    return objects;
+}
+
+hittable_list two_perlin_spheres()
+{
+    hittable_list objects;
+
+    auto pertext = make_shared<noise_texture>(4);
+    objects.add(make_shared<sphere>(point3(0, -1000, 0), 1000, make_shared<lambertian>(pertext)));
+    objects.add(make_shared<sphere>(point3(0, 2, 0), 2, make_shared<lambertian>(pertext)));
+
+    return objects;
+}
+
+hittable_list earth()
+{
+    auto earth_texture = make_shared<image_texture>("earthmap.jpg");
+    auto earth_surface = make_shared<lambertian>(earth_texture);
+    auto globe = make_shared<sphere>(point3(0, 0, 0), 2, earth_surface);
+
+    return hittable_list(globe);
+}
 
 int main() {
     const int image_width = 400;
@@ -80,7 +107,10 @@ int main() {
 
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
-    auto world = random_scene();
+    //auto world = random_scene();
+    //auto world = two_spheres();
+    //auto world = two_perlin_spheres();
+    auto world = earth();
 
     vec3 lookfrom(13,2,3);
     vec3 lookat(0,0,0);

@@ -3,7 +3,7 @@
 #include "rtweekend.h"
 
 #include "perlin.h"
-
+#include "rtw_stb_image.h"
 
 class texture  {
     public:
@@ -64,10 +64,11 @@ class noise_texture : public texture {
         noise_texture() {}
         noise_texture(double sc) : scale(sc) {}
 
-        virtual vec3 value(double u, double v, const vec3& p) const {
+        virtual color value(double u, double v, const point3& p) const {
             // return vec3(1,1,1)*0.5*(1 + noise.turb(scale * p));
             // return vec3(1,1,1)*noise.turb(scale * p);
             return vec3(1,1,1)*0.5*(1 + sin(scale*p.z() + 10*noise.turb(p)));
+            //return color(1, 1, 1) *0.5*(1.0+ noise.noise(scale*p));
         }
 
     public:
@@ -76,39 +77,90 @@ class noise_texture : public texture {
 };
 
 
-class image_texture : public texture {
-    public:
-        image_texture() {}
-        image_texture(unsigned char *pixels, int A, int B) : data(pixels), nx(A), ny(B) {}
+class image_texture : public texture
+{
+public:
+    const static int bytes_per_pixel = 3;
 
-        ~image_texture() {
-            delete data;
+    image_texture():data(nullptr),width(0),height(0),bytes_per_scanline(0){}
+
+    image_texture(const char* filename)
+    {
+        auto components_per_pixel = bytes_per_pixel;
+        data = stbi_load(filename, &width, &height, &components_per_pixel, components_per_pixel);
+
+        if (!data)
+        {
+            std::cerr << "ERROR: Could not load texture image file '" << filename << "'.\n";
+            width = height = 0;
         }
+        bytes_per_scanline = bytes_per_pixel * width;
+    }
 
-        virtual vec3 value(double u, double v, const vec3& p) const {
-            // If we have no texture data, then always emit cyan (as a debugging aid).
-            if (data == nullptr)
-                return vec3(0,1,1);
+    ~image_texture()
+    {
+        delete data;
+    }
 
-            auto i = static_cast<int>((  u)*nx);
-            auto j = static_cast<int>((1-v)*ny-0.001);
+    virtual color value(double u, double v, const vec3& p) const
+    {
+        //如果没有贴图数据，返回纯青色作为调试辅助
+        if (data == nullptr)
+            return color(0, 1, 1);
 
-            if (i < 0) i = 0;
-            if (j < 0) j = 0;
-            if (i > nx-1) i = nx-1;
-            if (j > ny-1) j = ny-1;
+        u = clamp(u, 0.0, 1.0);
+        v = 1.0 - clamp(v, 0.0, 1.0);
 
-            auto r = static_cast<int>(data[3*i + 3*nx*j+0]) / 255.0;
-            auto g = static_cast<int>(data[3*i + 3*nx*j+1]) / 255.0;
-            auto b = static_cast<int>(data[3*i + 3*nx*j+2]) / 255.0;
+        auto i = static_cast<int>(u * width);
+        auto j = static_cast<int>(v * height);
 
-            return vec3(r, g, b);
-        }
+        if (i >= width) i = width - 1;
+        if (j >= height) j = height - 1;
 
-    public:
-        unsigned char *data;
-        int nx, ny;
+        const auto color_scale = 1.0 / 255.0;
+        auto pixcel = data + j * bytes_per_scanline + i * bytes_per_pixel;
+        return color(color_scale * pixcel[0], color_scale * pixcel[1], color_scale * pixcel[2]);
+    }
+
+private:
+    unsigned char* data;
+    int width, height;
+    int bytes_per_scanline;
 };
+
+//class image_texture : public texture {
+//    public:
+//        image_texture() {}
+//        image_texture(unsigned char *pixels, int A, int B) : data(pixels), nx(A), ny(B) {}
+//
+//        ~image_texture() {
+//            delete data;
+//        }
+//
+//        virtual vec3 value(double u, double v, const vec3& p) const {
+//            // If we have no texture data, then always emit cyan (as a debugging aid).
+//            if (data == nullptr)
+//                return vec3(0,1,1);
+//
+//            auto i = static_cast<int>((  u)*nx);
+//            auto j = static_cast<int>((1-v)*ny-0.001);
+//
+//            if (i < 0) i = 0;
+//            if (j < 0) j = 0;
+//            if (i > nx-1) i = nx-1;
+//            if (j > ny-1) j = ny-1;
+//
+//            auto r = static_cast<int>(data[3*i + 3*nx*j+0]) / 255.0;
+//            auto g = static_cast<int>(data[3*i + 3*nx*j+1]) / 255.0;
+//            auto b = static_cast<int>(data[3*i + 3*nx*j+2]) / 255.0;
+//
+//            return vec3(r, g, b);
+//        }
+//
+//    public:
+//        unsigned char *data;
+//        int nx, ny;
+//};
 
 
 #endif
